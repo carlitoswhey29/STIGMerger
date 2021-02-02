@@ -2,8 +2,10 @@
 # .Author: Carlos Aguilar
 # .Description:  
 #    Copies the information from the old STIG onto a the new STIG. 
-# .Paramaters:
+#    -legacy flag maps the old STIG to the new STIG.
+# .Parameters:
 #     "Usage: {stigMerger.py} <old_STIG> <new_STIG> <xsl_format>"
+#     "Usage: {stigMerger.py} -legacy <old_STIG> <new_STIG> <xsl_format>"
 #
 # .TODO: 
 #     -Reduce complextity of writing.
