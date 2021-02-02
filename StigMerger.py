@@ -22,7 +22,7 @@ class Checklist:
         self.status = status
         self.comment = comment
 
-def write_to_XML(outfilename, data):
+def write_to_XML(outfilename, data, legacy):
     # Open original file
     tree = ET.parse(outfilename)
     ckl_root = tree.getroot() # element
@@ -35,13 +35,17 @@ def write_to_XML(outfilename, data):
       # complexity too high since if it's sorted
       for i in range(v_start, v_end): 
         vuln = vulns_elist[i] 
-        v_id = vuln[0].find('ATTRIBUTE_DATA')
+        if(legacy != True):
+          v_id = vuln[0].find('ATTRIBUTE_DATA')
+        else:
+          v_id = vuln[25].find('ATTRIBUTE_DATA')
         if(d.id == v_id.text):
           status = vuln.find('STATUS')
           status.text = d.status
           comment = vuln.find('COMMENTS')
           comment.text = d.comment
           break
+      
     tree.write(outfilename, encoding="UTF-8", xml_declaration=True, short_empty_elements=False)
 
 def get_vulnerability_data(tagName, lst):
@@ -74,20 +78,30 @@ def formatCKL(xml_filename, xsl_filename):
   print (xsET.tostring(newdom, pretty_print=True))
   print ("Formatting Complete...")
 
-def main(args=None):
+def main():
     try:
-      old_stig = sys.argv[1]
-      new_stig = sys.argv[2]
-      xsl_file = sys.argv[3]
+      args = sys.argv[1:]  
+      #Boolean True if needed to map to legacy id instead of vul id
+      if len(args) == 4 and args[0] == '-legacy':
+        old_stig = args[1]
+        new_stig = args[2]
+        xsl_file = args[3]
+        legacy   = True
+       else:
+        old_stig = args[0]
+        new_stig = args[1]
+        xsl_file = args[2]
+        legacy   = False
+        
     except IndexError:
-      raise SystemExit(f"Usage: {sys.argv[0]} <old_STIG> <new_STIG> <xsl_format>")
+      raise SystemExit(f"Usage: {sys.argv[0]} -legacy <old_STIG> <new_STIG> <xsl_format>")
     #print (sys.argv[::-1])
     # collect the comments for each vulnerability from the old stig
     data = []
     ckl = parse_xml(old_stig)  
     vuln_tag = ckl.getElementsByTagName('VULN')
     data = get_vulnerability_data(vuln_tag, data)
-    write_to_XML(new_stig, data)
+    write_to_XML(new_stig, data, legacy)
     formatCKL(new_stig, xsl_file)
 
 if __name__ == '__main__':
